@@ -1,0 +1,35 @@
+@model User
+
+@{
+    ViewData["Title"] = "EditUsers";
+}
+
+<form method="post" asp-action="EditUsers" asp-controller="HRM">
+    <div class="form-group">
+        <label asp-for="Username" class="form-label"></label>
+        <input type="text" asp-for="Username" class="form-control" readonly>
+        <span asp-validation-for="Username" class="text-danger"></span>
+    </div>
+    <div class="form-group">
+        <label asp-for="Phonenumber" class="form-label"></label>
+        <input type="text" asp-for="Phonenumber" class="form-control">
+        <span asp-validation-for="Phonenumber" class="text-danger"></span>
+    </div>
+    <div class="form-group">
+        <label asp-for="Email" class="form-label"></label>
+        <input type="text" asp-for="Email" class="form-control" readonly>
+        <span asp-validation-for="Email" class="text-danger"></span>
+    </div>
+    <div class="form-group">
+        <label asp-for="Address" class="form-label"></label>
+        <input type="text" asp-for="Address" class="form-control">
+        <span asp-validation-for="Address" class="text-danger"></span>
+    </div>
+    <div class="form-group">
+        <label asp-for="Password" class="form-label"></label>
+        <input type="text" asp-for="Password" class="form-control" readonly>
+        <span asp-validation-for="Password" class="text-danger"></span>
+    </div>
+    <input type="submit" value="Update" class="btn btn-outline-secondary">
+    <a asp-action="ProfileHRM" class="btn btn-outline-dark">Back To List</a>
+</form>
