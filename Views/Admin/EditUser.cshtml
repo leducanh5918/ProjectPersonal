@@ -1,0 +1,83 @@
+@model User
+@{
+    ViewData["Title"] = "EditUser";
+}
+<form method="post" asp-action="EditUser" asp-controller="Admin" id="profileForm">
+    <div class="form-group">
+        <label asp-for="Username" class="form-label"></label>
+        <input type="text" asp-for="Username" class="form-control" readonly>
+        <span asp-validation-for="Username" class="text-danger"></span>
+    </div>
+    <div class="form-group">
+        <label asp-for="Phonenumber" class="form-label"></label>
+        <input type="text" asp-for="Phonenumber" class="form-control">
+        <span asp-validation-for="Phonenumber" class="text-danger"></span>
+    </div>
+    <div class="form-group">
+        <label asp-for="Email" class="form-label"></label>
+        <input type="text" asp-for="Email" class="form-control" readonly>
+        <span asp-validation-for="Email" class="text-danger"></span>
+    </div>
+    <div class="radio-group">
+        <label for="roleUser">User
+            <input type="radio" asp-for="RoleID" value="1" checked>
+        </label>
+        <label for="roleHRM">HRM
+            <input type="radio" asp-for="RoleID" value="2">
+        </label>
+    </div>
+    <div class="form-group">
+        <label asp-for="Address" class="form-label"></label>
+        <input type="text" asp-for="Address" class="form-control">
+        <span asp-validation-for="Address" class="text-danger"></span>
+    </div>
+    <div class="form-group">
+        <label asp-for="Password" class="form-label"></label>
+        <input type="text" asp-for="Password" class="form-control" readonly>
+        <span asp-validation-for="Password" class="text-danger"></span>
+    </div>
+    <input type="submit" id="submitBtn" value="Update" class="btn btn-outline-secondary">
+    <a asp-action="Index" class="btn btn-outline-dark">Back To List</a>
+</form>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@10"></script>
+<script src="/resources/UserAssets/js/jquery-2.1.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script>
+<script src="https://code.jquery.com/jquery-1.10.2.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.0/dist/js/bootstrap.bundle.min.js"></script>
+<script type="text/javascript"></script>
+<script>
+    $(document).ready(function () {
+        $('#submitBtn').on('click', function (event) {
+            event.preventDefault(); // Prevent the default form submission
+
+            var formdata = $('#profileForm').serialize();
+            
+            // Get the anti-forgery token
+            var token = $('input[name="__RequestVerificationToken"]').val();
+
+            $.ajax({
+                url: '@Url.Action("EditUser", "Admin")',
+                type: "POST",
+                data: formdata + '&__RequestVerificationToken=' + token,
+                success: function (response) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Cập nhật thành công',
+                        text: 'Thông tin tài khoản đã được cập nhật.'
+                    });
+                },
+                error: function (error) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Có lỗi xảy ra',
+                        text: 'Không thể cập nhật thông tin tài khoản. Vui lòng thử lại sau.'
+                    });
+                }
+            });
+        });
+    });
+</script>
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

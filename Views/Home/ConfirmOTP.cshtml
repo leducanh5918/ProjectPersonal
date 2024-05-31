@@ -1,0 +1,97 @@
+@model ConfirmOTPViewModel
+@{
+    ViewData["Title"] = "Confirm OTP";
+}
+@if (!ViewData.ModelState.IsValid)
+{
+    <div class="alert alert-danger" role="alert">
+        @foreach (var key in ViewData.ModelState.Keys)
+        {
+            foreach (var error in ViewData.ModelState[key].Errors)
+            {
+                <span>@error.ErrorMessage</span>
+            }
+        }
+    </div>
+}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Confirm OTP</h3>
+                </div>
+                <div class="card-body">
+                    <form asp-action="ConfirmOTP" method="post">
+                        <input type="hidden" asp-for="Email" />
+
+                        <div class="form-group">
+                            <label asp-for="OTPCode" class="control-label"></label>
+                            <input asp-for="OTPCode" class="form-control" id="otpCodeInput" />
+                            <span asp-validation-for="OTPCode" class="text-danger"></span>
+                        </div>
+
+                        <div class="form-group">
+                            <label>OTP Expiration Time:</label>
+                            <p id="countdown"></p>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary" id="submitButton">Confirm OTP</button>
+                        <button type="button" class="btn btn-secondary" id="resendButton">Resend OTP</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        (function() {
+            var otpCodeInput = document.getElementById('otpCodeInput');
+            var submitButton = document.getElementById('submitButton');
+            var resendButton = document.getElementById('resendButton');
+            var countdownElement = document.getElementById('countdown');
+            var endTime = new Date().getTime() + 1 * 60 * 1000; // 2 minutes from now
+
+            function updateCountdown() {
+                var now = new Date().getTime();
+                var distance = endTime - now;
+
+                var minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+                var seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+                countdownElement.textContent = minutes + "m " + seconds + "s ";
+
+                if (distance < 0) {
+                    clearInterval(interval);
+                    countdownElement.textContent = "OTP expired";
+                    otpCodeInput.disabled = true;
+                    submitButton.disabled = true;
+                }
+            }
+
+            resendButton.addEventListener('click', function() {
+                fetch('/Home/ResendOTP?email=' + encodeURIComponent('@Model.Email'))
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            endTime = new Date().getTime() + 2 * 60 * 1000; // Reset countdown
+                            otpCodeInput.disabled = false;
+                            submitButton.disabled = false;
+                            clearInterval(interval);
+                            interval = setInterval(updateCountdown, 1000);
+                            updateCountdown();
+                        } else {
+                            alert('Failed to resend OTP. Please try again.');
+                        }
+                    })
+                    .catch(error => console.error('Error:', error));
+            });
+
+            var interval = setInterval(updateCountdown, 1000);
+            updateCountdown(); // Initial call to set the countdown right away
+        })();
+    </script>
+}
