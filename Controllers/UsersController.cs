@@ -73,26 +73,40 @@ namespace projectPersonal.Controllers
         [HttpPost]
         public async Task<IActionResult> EditImg(User obj, string UserName, IFormFile imageFile)
         {
+            // Lấy thông tin từ session
             string username = HttpContext.Session.GetString("UserName");
             ViewBag.Username = username;
             string email = HttpContext.Session.GetString("Email");
             ViewBag.Email = email;
+
+            // Tìm người dùng trong cơ sở dữ liệu
             var user = _db.users.FirstOrDefault(x => x.Username == username);
 
             if (imageFile != null && imageFile.Length > 0)
             {
                 var validImageTypes = new[] { "image/jpeg", "image/png", "image/gif" };
-                if (!validImageTypes.Contains(imageFile.ContentType))
+
+                // Chuyển đổi content type thành chữ in hoa để so sánh không phân biệt chữ hoa thường
+                string contentType = imageFile.ContentType.ToUpper();
+
+                // Kiểm tra nếu content type có trong danh sách các loại ảnh hợp lệ
+                if (!validImageTypes.Select(type => type.ToUpper()).Contains(contentType))
                 {
                     return BadRequest("Chỉ chấp nhận các tệp hình ảnh (JPEG, PNG, GIF).");
+                }
 
-                }
-                var oldImagePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", user.Image?.TrimStart('/'));
-                if (System.IO.File.Exists(oldImagePath))
+                // Kiểm tra nếu user.Image không phải là null và xử lý ảnh cũ
+                if (!string.IsNullOrEmpty(user.Image))
                 {
-                    // Xóa ảnh cũ
-                    System.IO.File.Delete(oldImagePath);
+                    var oldImagePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", user.Image.TrimStart('/'));
+                    if (System.IO.File.Exists(oldImagePath))
+                    {
+                        // Xóa ảnh cũ
+                        System.IO.File.Delete(oldImagePath);
+                    }
                 }
+
+                // Tạo đường dẫn ảnh mới
                 var newImagePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "images", imageFile.FileName);
 
                 // Tạo thư mục nếu không tồn tại
@@ -102,11 +116,13 @@ namespace projectPersonal.Controllers
                     Directory.CreateDirectory(directory);
                 }
 
+                // Lưu ảnh mới vào đường dẫn mới
                 using (var stream = new FileStream(newImagePath, FileMode.Create))
                 {
                     await imageFile.CopyToAsync(stream);
                 }
 
+                // Cập nhật đường dẫn ảnh mới cho người dùng
                 user.Image = "/images/" + imageFile.FileName;
                 _db.users.Update(user);
                 await _db.SaveChangesAsync();
@@ -117,6 +133,7 @@ namespace projectPersonal.Controllers
 
             return BadRequest("Không có file ảnh nào được tải lên.");
         }
+
 
 
         [HttpGet]
@@ -245,7 +262,11 @@ namespace projectPersonal.Controllers
 
             var user = JsonConvert.DeserializeObject<User>(userJson);
             user.Password = MD5Hash.CalculateMD5Hash(model.NewPassword);
-
+            var trackedUser = _db.users.Local.FirstOrDefault(u => u.IDCard == user.IDCard);
+            if (trackedUser != null)
+            {
+                _db.Entry(trackedUser).State = EntityState.Detached;
+            }
             _db.users.Update(user);
             await _db.SaveChangesAsync();
             ViewBag.Message = "ChangePassword confirmed! You can now login.";

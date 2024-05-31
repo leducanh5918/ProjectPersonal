@@ -162,8 +162,29 @@ namespace projectPersonal.Controllers
         [HttpPost]
         public async Task<IActionResult> Register(User us)
         {
+            var obj = await this._db.users.FirstOrDefaultAsync(u => u.Username == us.Username || u.Phonenumber == us.Phonenumber || u.Email == us.Email);
+            if (obj != null)
+            {
+                if (obj.Username == us.Username)
+                {
+                    ModelState.AddModelError("Username", "Username already exists");
+                    return View();
+                }
+                else if (obj.Phonenumber == us.Phonenumber)
+                {
+                    ModelState.AddModelError("Phonenumber", "Phonenumber already exists");
+                    return View();
+                }
+                else if (obj.Email == us.Email)
+                {
+                    ModelState.AddModelError("Email", "Email already exists");
+                    return View();
+                }
+            }
+
             us.Password = MD5Hash.CalculateMD5Hash(us.Password);
             us.registrationDate = DateTime.Now;
+
             if (us.RoleID == 1 || us.RoleID == null)
             {
                 us.RoleID = 1; // Mặc định chọn User nếu RoleID không được thiết lập hoặc đã được thiết lập thành User
